@@ -1,0 +1,123 @@
+<!doctype html>
+ <html>
+ <head>
+ <meta charset="utf-8">
+ <title></title>
+ </head>
+ <body>
+ <canvas id="canvas"></canvas>
+ <script>
+ var canvas = document.getElementById('canvas'),
+ ctx = canvas.getContext('2d'),
+ canvasW = canvas.width = window.innerWidth,
+ canvasH = canvas.height = window.innerHeight,
+ canvasWHalf = canvasW / 2,
+ canvasHHalf = canvasH / 2,
+ xoff = canvasWHalf - 306,
+ yoff = 50,
+ bg = '00061a',
+ id = 0,
+ raindrops = [],
+ minSize = 1,
+ maxSize = 4,
+ minSpeed = 5,
+ maxSpeed = 20,
+ minHue = 0,
+ maxHue = 360,
+ maxAmount = 50;
+ function random(min, max) {
+ if (arguments.length < 2) {
+  max = min;
+  min = 0;
+ }
+ return Math.floor(Math.random() * (max - min) + min);
+ }
+ function hexToRGB(hex, opacity) {
+ var rgb = '';
+ hex.match(/.{2}/g).forEach(function(n) {
+  rgb += (parseInt(n, 16)) + ',';
+ });
+ return 'rgba(' + rgb + opacity + ')';
+ }
+ function draw() {
+ // Heart
+ ctx.fillStyle = hexToRGB(bg, '0.1');
+ ctx.beginPath();
+ // Left half
+ ctx.moveTo(0, 0);
+ ctx.lineTo(canvasWHalf, 0);
+ ctx.lineTo(304 + xoff, 97 + yoff);
+ ctx.bezierCurveTo(282 + xoff, -5 + yoff, 80 + xoff, -6 + yoff, 76 + xoff, 165 + yoff);
+ ctx.bezierCurveTo(74 + xoff, 251 + yoff, 184 + xoff, 300 + yoff, 304 + xoff, 447 + yoff);
+ ctx.lineTo(canvasWHalf, canvasH);
+ ctx.lineTo(0, canvasH);
+ // Right half
+ ctx.moveTo(canvasW, 0);
+ ctx.lineTo(canvasWHalf, 0);
+ ctx.lineTo(304 + xoff, 97 + yoff);
+ ctx.bezierCurveTo(326 + xoff, 5 + yoff, 528 + xoff, 6 + yoff, 532 + xoff, 165 + yoff);
+ ctx.bezierCurveTo(534 + xoff, 251 + yoff, 424 + xoff, 300 + yoff, 304 + xoff, 447 + yoff);
+ ctx.lineTo(canvasWHalf, canvasH);
+ ctx.lineTo(canvasW, canvasH);
+ ctx.closePath();
+ ctx.fill();
+ // Raindrops
+ for (var i = 1; i < id; i++) {
+  raindrops[i].fall();
+ };
+ }
+ var Raindrop = function() {
+ id++;
+ this.y = random(-canvasH);
+ this.x = random(canvasW);
+ this.size = random(minSize, maxSize);
+ this.speed = random(minSpeed, maxSpeed);
+ this.color = 'hsl(' + random(minHue, maxHue) + ',100%,55%)';
+ this.origColor = this.color;
+ this.id = id;
+ raindrops[id] = this;
+ };
+ Raindrop.prototype.fall = function() {
+ this.y += this.speed;
+ if (this.y >= canvasH) {
+  this.y = random(-canvasH);
+  this.x = random(canvasW);
+ }
+ ctx.save();
+ ctx.beginPath();
+ var gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.size);
+ gradient.addColorStop(0, '#fff');
+ gradient.addColorStop(0.5, this.color);
+ gradient.addColorStop(1, hexToRGB(bg, 0));
+ ctx.rect(this.x, this.y, this.size, maxSpeed);
+ ctx.fillStyle = gradient;
+ ctx.fill();
+ ctx.closePath();
+ ctx.restore();
+ };
+ (function init() {
+ ctx.fillStyle = '#' + bg;
+ ctx.fillRect(0, 0, canvasW, canvasH);
+ for (var i = 0; i < maxAmount; i++) {
+  new Raindrop();
+ }
+ }());
+ function animate() {
+ draw();
+ window.requestAnimationFrame(animate);
+ }
+ window.requestAnimationFrame(animate);
+ function mouseTrail(x, y) {
+ ctx.save();
+ ctx.globalCompositeOperation = 'overlay';
+ ctx.fillStyle = 'rgba(255,255,255,0.1)';
+ ctx.arc(x, y, 50, 0, Math.PI * 2);
+ ctx.fill();
+ ctx.restore();
+ }
+ window.addEventListener('mousemove', function(cursor) {
+ mouseTrail(cursor.x, cursor.y);
+ });
+ </script>
+ </body>
+</html>
